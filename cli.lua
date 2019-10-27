@@ -7,6 +7,15 @@ Citizen.CreateThread(function()
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 		Citizen.Wait(0)
 	end
+	
+	Citizen.Wait(1000)
+
+	while ESX.GetPlayerData().job == nil do
+		Citizen.Wait(100)
+	end
+
+	PlayerData = ESX.GetPlayerData()
+
 	TriggerEvent('es:setMoneyDisplay', 0.0)
 	ESX.UI.HUD.SetDisplay(0.0)
 	
@@ -16,7 +25,7 @@ end)
 
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer) 
-	local data = xPlayer
+	local data = PlayerData
 	local accounts = data.accounts
 	for k,v in pairs(accounts) do
 		local account = v
@@ -24,13 +33,12 @@ AddEventHandler('esx:playerLoaded', function(xPlayer)
 			SendNUIMessage({action = "setValue", key = "bankmoney", value = "$"..account.money})
 		elseif account.name == "black_money" then
 			SendNUIMessage({action = "setValue", key = "dirtymoney", value = "$"..account.money})
--- Society pridani		
-		elseif account.name == "society_money" then
-			SendNUIMessage({action = "setValue", key = "society_money", value = "$"..account.money})
-		end
-	 
 	end
-
+-- Society pridani		
+	ESX.TriggerServerCallback('esx_society:getSocietyMoney', function(money)
+		SendNUIMessage({action = "setValue", key = "society_money", value = "$"..money})
+	end, data.job.name)
+	 
 -- Job
 	local job = data.job
 	SendNUIMessage({action = "setValue", key = "job", value = job.label.." - "..job.grade_label, icon = job.name})
@@ -85,7 +93,7 @@ end)
 RegisterNetEvent('esx_addonaccount:setMoney')
 AddEventHandler('esx_addonaccount:setMoney', function(society, money)
 	if ESX.PlayerData.job and ESX.PlayerData.job.grade_name == 'boss' and 'society_' .. ESX.PlayerData.job.name == society then
-		SendNUIMessage({action = "setValue", key = "society_money", value = "$"..account.money})
+		SendNUIMessage({action = "setValue", key = "society_money", value = "$"..money})
 	end
 end)
 
